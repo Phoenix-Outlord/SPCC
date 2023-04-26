@@ -1,0 +1,84 @@
+# Operators list
+OPERATORS = {'+', '(', ')', '-', '/', '*'}
+
+# Priority of Operators
+PRI = {
+    '+': 1,
+    '-': 1,
+    '*': 2,
+    '/': 2
+}
+
+# Function to expression into postfix expression
+
+
+def infix_to_postfix(exp):
+    # initialize empty stack & empty output string
+    stack = []
+    output = ''
+
+    # For each character in expression
+    for ch in exp:
+        # if charactar is not an operator (operand) then add character in ouput string
+        if (ch not in OPERATORS):
+            output += ch
+
+        # else if character is (, then add character in stack
+        elif (ch == '('):
+            stack.append('(')
+
+        # else if character is ')', pop from stack until ( is found
+        # add poped character's in the output string
+        elif (ch == ')'):
+            while stack and stack[-1] != '(':
+                output += stack.pop()
+            # pop '(' from stack finally
+            stack.pop()
+
+        # else if character is an operator
+        # if stack is empty push character in stack
+        # else compare character with character in stack's top and :-
+        #  if character has higher precedence push char. to stack
+        #  if char. has lower precedence take items from stack one by one and add them in o.p string
+        #  then push the character  in stack
+        else:
+            while stack and stack[-1] != '(' and PRI[ch] <= PRI[stack[-1]]:
+                output += stack.pop()
+            stack.append(ch)
+
+    # finally when the expression is done evaluating pop the remaining char. from stack and add them in i/p string
+    while stack:
+        output += stack.pop()
+
+    print(f'POSTFIX: {output}')
+    return output
+
+# Function to generate 3 address code of given postfix expression
+
+
+def generate3AC(postfix):
+    print('### INTERMEDIATE CODE ###')
+
+    # initialize a empty stack and a t variable to 1
+    exp_stack = []
+    t = 1
+
+    # For char. in postfix expression
+    for i in postfix:
+        # if char. is not an operator add character in exp_stack
+        if i not in OPERATORS:
+            exp_stack.append(i)
+        else:
+            # pop top 2 characters from stack and add the operator in between
+            # and label expression as t{t}
+            print(f't{t} = {exp_stack[-2]} {i} {exp_stack[-1]}')
+            exp_stack = exp_stack[:-2]
+
+            # next add the label expression in exp_stack and increment value of t
+            exp_stack.append(f't{t}')
+            t += 1
+
+
+expression = "(a*b+c)/d"
+postfix = infix_to_postfix(expression)
+generate3AC(postfix)
