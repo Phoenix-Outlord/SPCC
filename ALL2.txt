@@ -1,0 +1,420 @@
+exp3
+Pass 1 of 2 pass macro processor
+
+#include<stdio.h>
+#include<conio.h>
+#include<string.h>
+#include<stdlib.h>
+void main()
+{
+FILE *f1,*f2,*f3;
+char mne[20],opnd[20],la[20];
+f1=fopen("minp2.txt","r");
+f2=fopen("ntab2.txt","w+");
+f3=fopen("dtab2.txt","w+");
+fscanf(f1,"%s%s%s",la,mne,opnd);
+while(strcmp(mne,"MEND")!=0)
+{
+if(strcmp(mne,"MACRO")==0)
+{
+fprintf(f2,"%s\n",la);
+fprintf(f3,"%s\t%s\n",la,opnd);
+}
+else
+fprintf(f3,"%s\t%s\n",mne,opnd);
+fscanf(f1,"%s%s%s",la,mne,opnd);
+}
+fprintf(f3,"%s",mne);
+fclose(f1);
+fclose(f2);
+fclose(f3);
+printf("PASS 1 is successful");
+getch();
+}
+
+INPUT:
+EX1	  MACRO 	&A,&B
+-              LDA                &A
+-    	  STA                 &B
+-              MEND              -
+SAMPLE  START         1000
+-              EX1                N1,N2
+N1          RESW              1
+N2          RESW              1
+-              END                 -
+
+OUTPUT:
+ntab2.txt
+EX1
+
+	dtab2.txt
+	EX1	&A,&B
+LDA	&A
+STA	&B
+MEND
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SPCC 5 Lexical Analyzer
+
+#include<iostream>
+#include<fstream>
+#include<stdlib.h>
+#include<string.h>
+#include<ctype.h>
+ 
+using namespace std;
+ 
+int isKeyword(char buffer[]){
+char keywords[32][10] = {"auto","break","case","char","const","continue","default","do","double","else","enum","extern","float, "for","goto","if","int","long","register","return","short","signed","sizeof","static","struct","switch","typee","union","unsigned","void","volatile","while"};
+int i, flag = 0;
+for(i = 0; i < 32; ++i){
+if(strcmp(keywords[i], buffer) == 0){
+flag = 1;
+break;
+}
+}
+return flag;
+}
+
+int main(){
+char ch, buffer[15], operators[] = "+-*/%=";
+ifstream fin("program.txt");
+int i,j=0;
+if(!fin.is_open()){
+cout<<"error while opening the file\n";
+exit(0);
+}
+while(!fin.eof()){
+   ch = fin.get();
+  
+for(i = 0; i < 6; ++i){
+   if(ch == operators[i])
+   cout<<ch<<" is operator\n";
+   }
+  
+   if(isalnum(ch)){
+   buffer[j++] = ch;
+  }
+   else if((ch == ' ' || ch == '\n') && (j != 0)){
+   buffer[j] = '\0';
+   j = 0;     
+   if(isKeyword(buffer) == 1)
+   cout<<buffer<<" is keyword\n";
+   else
+   cout<<buffer<<" is indentifier\n";
+   }
+}
+fin.close();
+return 0;
+}
+
+OUTPUT:
+
+includeiostream is indentifier
+using is indentifier
+namespace is indentifier
+std is indentifier
+int is keyword
+main is indentifier
+coutHello is indentifier
+Compiler is indentifier
+I is indentifier
+am is indentifier
++ is operator
++ is operator
+C is indentifier
+coutendl is indentifier
+return is keyword
+0 is indentifier
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Exp 6: Shift Reduce Parser
+
+#include <iostream>
+using namespace std;
+
+int z = 0, i = 0, j = 0, c = 0;
+
+char a[16], ac[20], stk[15], act[10];
+
+void check()
+{
+	strcpy(ac,"REDUCE TO E -> ");
+	
+	for(z = 0; z < c; z++)
+	{
+		if(stk[z] == '4')
+		{
+			printf("%s4", ac);
+			stk[z] = 'E';
+			stk[z + 1] = '\0';
+	
+			printf("\n$%s\t%s$\t", stk, a);
+		}
+	}
+		
+	for(z = 0; z < c - 2; z++)
+	{
+		if(stk[z] == '2' && stk[z + 1] == 'E' &&
+								stk[z + 2] == '2')
+		{
+			printf("%s2E2", ac);
+			stk[z] = 'E';
+			stk[z + 1] = '\0';
+			stk[z + 2] = '\0';
+			printf("\n$%s\t%s$\t", stk, a);
+			i = i - 2;
+		}
+		
+	}
+		
+	for(z = 0; z < c - 2; z++)
+	{
+		if(stk[z] == '3' && stk[z + 1] == 'E' &&
+								stk[z + 2] == '3')
+		{
+			printf("%s3E3", ac);
+			stk[z]='E';
+			stk[z + 1]='\0';
+			stk[z + 2]='\0';
+			printf("\n$%s\t%s$\t", stk, a);
+			i = i - 2;
+		}
+	}
+	return ; 
+}
+
+int main()
+{
+	printf("GRAMMAR is -\nE->2E2 \nE->3E3 \nE->4\n");	
+	
+	strcpy(a,"32423");
+	
+	c=strlen(a);
+	
+	strcpy(act,"SHIFT");
+	
+	printf("\nstack \t input \t action");
+	
+	printf("\n$\t%s$\t", a);
+	
+	for(i = 0; j < c; i++, j++)
+	{
+		printf("%s", act);
+		
+		stk[i] = a[j];	
+		stk[i + 1] = '\0';
+		
+		a[j]=' ';
+		
+		printf("\n$%s\t%s$\t", stk, a);
+		check();
+	}
+	check();
+	if(stk[0] == 'E' && stk[1] == '\0')
+		printf("Accept\n");
+	else //else reject
+		printf("Reject\n");
+}
+Output:
+
+GRAMMAR is -
+E->2E2 
+E->3E3 
+E->4
+
+stack    input   action
+$       32423$  SHIFT
+$3       2423$  SHIFT
+$32       423$  SHIFT
+$324       23$  REDUCE TO E -> 4
+$32E       23$  SHIFT
+$32E2       3$  REDUCE TO E -> 2E2
+$3E         3$  SHIFT
+$3E3         $  REDUCE TO E -> 3E3
+$E           $  Accept
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Exp 7:  Intermediate code generation
+
+#include<stdio.h>
+#include<conio.h>
+#include<stdlib.h>
+#include<string.h>
+
+struct three
+{
+    char data[10],temp[7];
+}s[30];
+
+int main()
+{
+    char d1[7],d2[7]="t";
+    int i=0,j=1,len=0;
+    FILE *f1,*f2;
+    f1=fopen("sum.txt","r");
+    f2=fopen("out.txt","w");
+    while(fscanf(f1,"%s",s[len].data)!=EOF)
+    len++;
+    itoa(j,d1,7);
+    strcat(d2,d1);
+    strcpy(s[j].temp,d2);
+    strcpy(d1,"");
+    strcpy(d2,"t");
+    if(!strcmp(s[3].data,"+"))
+    {
+        fprintf(f2,"%s=%s+%s",s[j].temp,s[i+2].data,s[i+4].data);
+        j++;
+    }
+    else if(!strcmp(s[3].data,"-"))
+    {
+        fprintf(f2,"%s=%s-%s",s[j].temp,s[i+2].data,s[i+4].data);
+        j++;
+    }
+    for(i=4;i<len-2;i+=2)
+    {
+        itoa(j,d1,7);
+        strcat(d2,d1);
+        strcpy(s[j].temp,d2);
+        if(!strcmp(s[i+1].data,"+"))
+            fprintf(f2,"\n%s=%s+%s",s[j].temp,s[j-1].temp,s[i+2].data);
+        else if(!strcmp(s[i+1].data,"-"))
+        fprintf(f2,"\n%s=%s-%s",s[j].temp,s[j-1].temp,s[i+2].data);
+        strcpy(d1,"");
+        strcpy(d2,"t");
+        j++;
+    }
+    fprintf(f2,"\n%s=%s",s[0].data,s[j-1].temp);
+    fclose(f1);
+    fclose(f2);
+    return 0;
+}
+
+sum.txt:
+a = b + c + d
+
+OUTPUT:
+out.txt
+t1=b+c
+t2=t1+d
+a=t2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//code optimization- constant folding
+
+#include <iostream>
+#include <string>
+#include <regex>
+
+int main() {
+    std::string inputCode = "int x = 5 + 7 * 3;";
+    std::regex constantExpression("(\\d+)\\s*[+*]\\s*(\\d+)");
+
+    while (std::regex_search(inputCode, constantExpression)) {
+        std::smatch match = constantExpression[0];
+        int operand1 = std::stoi(match[1].str());
+        int operand2 = std::stoi(match[2].str());
+        int result;
+        if (match.str().find("+") != std::string::npos) {
+            result = operand1 + operand2;
+        } else {
+            result = operand1 * operand2;
+        }
+        inputCode.replace(match.position(), match.length(), std::to_string(result));
+    }
+
+    std::cout << inputCode << "\n";
+    return 0;
+}
+
+
+
+
+
+
+
+
