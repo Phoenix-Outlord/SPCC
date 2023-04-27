@@ -1,0 +1,563 @@
+1)PASS 1 -
+
+#include<stdio.h>
+#include<conio.h>
+#include<string.h>
+#include<stdlib.h>
+void main()
+{
+FILE *f1,*f2,*f3;
+char mne[20],opnd[20],la[20];
+clrscr();
+f1=fopen("minp2.txt","r");
+f2=fopen("ntab2.txt","w+");
+f3=fopen("dtab2.txt","w+");
+fscanf(f1,"%s%s%s",la,mne,opnd);
+while(strcmp(mne,"MEND")!=0)
+{
+if(strcmp(mne,"MACRO")==0)
+{
+fprintf(f2,"%s\n",la);
+fprintf(f3,"%s\t%s\n",la,opnd);
+}
+else
+fprintf(f3,"%s\t%s\n",mne,opnd);
+fscanf(f1,"%s%s%s",la,mne,opnd);
+}
+fprintf(f3,"%s",mne);
+fclose(f1);
+fclose(f2);
+fclose(f3);
+printf("PASS 1 is successful");
+getch();
+}
+
+EX1	MACRO	&A,&B
+-	LDA	&A
+-	STA	&B
+-	MEND	-
+SAMPLE	START	1000
+-	EX1	N1,N2
+N1	RESW	1
+N2	RESW	1
+-	END	-
+
+
+
+
+
+2)PASS 2 - 
+#include<stdio.h>
+#include<conio.h>
+#include<string.h>
+#include<stdlib.h>
+void main()
+{
+FILE *f1,*f2,*f3,*f4,*f5;
+int i,len;
+char mne[20],opnd[20],la[20],name[20],mne1[20],opnd1[20],arg[20];
+clrscr();
+f1=fopen("minp2.txt","r");
+f2=fopen("ntab2.txt","r");
+f3=fopen("dtab2.txt","r");
+f4=fopen("atab2.txt","w+");
+f5=fopen("op2.txt","w");
+fscanf(f1,"%s%s%s",la,mne,opnd);
+while(strcmp(mne,"END")!=0)
+{
+if(strcmp(mne,"MACRO")==0)
+{
+fscanf(f1,"%s%s%s",la,mne,opnd);
+while(strcmp(mne,"MEND")!=0)
+fscanf(f1,"%s%s%s",la,mne,opnd);
+}
+else
+{
+fscanf(f2,"%s",name);
+if(strcmp(mne,name)==0)
+{
+len=strlen(opnd);
+for(i=0;i<len;i++)
+{
+if(opnd[i]!=',')
+fprintf(f4,"%c",opnd[i]);
+else
+fprintf(f4,"\n");
+}
+fseek(f2,SEEK_SET,0);
+fseek(f4,SEEK_SET,0);
+fscanf(f3,"%s%s",mne1,opnd1);
+fprintf(f5,".\t%s\t%s\n",mne1,opnd);
+fscanf(f3,"%s%s",mne1,opnd1);
+while(strcmp(mne1,"MEND")!=0)
+{
+if((opnd1[0]=='&'))
+{
+fscanf(f4,"%s",arg);
+fprintf(f5,"-\t%s\t%s\n",mne1,arg);
+}
+else
+fprintf(f5,"-\t%s\t%s\n",mne1,opnd1);
+fscanf(f3,"%s%s",mne1,opnd1);
+}
+}
+else
+fprintf(f5,"%s\t%s\t%s\n",la,mne,opnd);
+}
+fscanf(f1,"%s%s%s",la,mne,opnd);
+}
+fprintf(f5,"%s\t%s\t%s\n",la,mne,opnd);
+fclose(f1);
+fclose(f2);
+fclose(f3);
+fclose(f4);
+fclose(f5);
+printf("pass2");
+getch();
+}
+
+
+INPUT - 
+
+EX1	MACRO	&A,&B
+-	LDA	&A
+-	STA	&B
+-	MEND	-
+SAMPLE	START	1000
+-	EX1	N1,N2
+N1	RESW	1
+N2	RESW	1
+-	END	-
+
+
+
+
+DTAB - 
+
+EX1	&A,&B
+LDA	&A
+STA	&B
+MEND
+
+
+
+NTAB
+
+EX1
+
+
+
+
+3)LEXICAL - 
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+// Returns 'true' if the character is a DELIMITER.
+bool isDelimiter(char ch)
+{
+	if (ch == ' ' || ch == '+' || ch == '-' || ch == '*' ||
+		ch == '/' || ch == ',' || ch == ';' || ch == '>' ||
+		ch == '<' || ch == '=' || ch == '(' || ch == ')' ||
+		ch == '[' || ch == ']' || ch == '{' || ch == '}')
+		return (true);
+	return (false);
+}
+
+// Returns 'true' if the character is an OPERATOR.
+bool isOperator(char ch)
+{
+	if (ch == '+' || ch == '-' || ch == '*' ||
+		ch == '/' || ch == '>' || ch == '<' ||
+		ch == '=')
+		return (true);
+	return (false);
+}
+
+// Returns 'true' if the string is a VALID IDENTIFIER.
+bool validIdentifier(char* str)
+{
+	if (str[0] == '0' || str[0] == '1' || str[0] == '2' ||
+		str[0] == '3' || str[0] == '4' || str[0] == '5' ||
+		str[0] == '6' || str[0] == '7' || str[0] == '8' ||
+		str[0] == '9' || isDelimiter(str[0]) == true)
+		return (false);
+	return (true);
+}
+
+// Returns 'true' if the string is a KEYWORD.
+bool isKeyword(char* str)
+{
+	if (!strcmp(str, "if") || !strcmp(str, "else") ||
+		!strcmp(str, "while") || !strcmp(str, "do") ||
+		!strcmp(str, "break") ||
+		!strcmp(str, "continue") || !strcmp(str, "int")
+		|| !strcmp(str, "double") || !strcmp(str, "float")
+		|| !strcmp(str, "return") || !strcmp(str, "char")
+		|| !strcmp(str, "case") || !strcmp(str, "char")
+		|| !strcmp(str, "sizeof") || !strcmp(str, "long")
+		|| !strcmp(str, "short") || !strcmp(str, "typedef")
+		|| !strcmp(str, "switch") || !strcmp(str, "unsigned")
+		|| !strcmp(str, "void") || !strcmp(str, "static")
+		|| !strcmp(str, "struct") || !strcmp(str, "goto"))
+		return (true);
+	return (false);
+}
+
+// Returns 'true' if the string is an INTEGER.
+bool isInteger(char* str)
+{
+	int i, len = strlen(str);
+
+	if (len == 0)
+		return (false);
+	for (i = 0; i < len; i++) {
+		if (str[i] != '0' && str[i] != '1' && str[i] != '2'
+			&& str[i] != '3' && str[i] != '4' && str[i] != '5'
+			&& str[i] != '6' && str[i] != '7' && str[i] != '8'
+			&& str[i] != '9' || (str[i] == '-' && i > 0))
+			return (false);
+	}
+	return (true);
+}
+
+// Returns 'true' if the string is a REAL NUMBER.
+bool isRealNumber(char* str)
+{
+	int i, len = strlen(str);
+	bool hasDecimal = false;
+
+	if (len == 0)
+		return (false);
+	for (i = 0; i < len; i++) {
+		if (str[i] != '0' && str[i] != '1' && str[i] != '2'
+			&& str[i] != '3' && str[i] != '4' && str[i] != '5'
+			&& str[i] != '6' && str[i] != '7' && str[i] != '8'
+			&& str[i] != '9' && str[i] != '.' ||
+			(str[i] == '-' && i > 0))
+			return (false);
+		if (str[i] == '.')
+			hasDecimal = true;
+	}
+	return (hasDecimal);
+}
+
+// Extracts the SUBSTRING.
+char* subString(char* str, int left, int right)
+{
+	int i;
+	char* subStr = (char*)malloc(
+				sizeof(char) * (right - left + 2));
+
+	for (i = left; i <= right; i++)
+		subStr[i - left] = str[i];
+	subStr[right - left + 1] = '\0';
+	return (subStr);
+}
+
+// Parsing the input STRING.
+void parse(char* str)
+{
+	int left = 0, right = 0;
+	int len = strlen(str);
+
+	while (right <= len && left <= right) {
+		if (isDelimiter(str[right]) == false)
+			right++;
+
+		if (isDelimiter(str[right]) == true && left == right) {
+			if (isOperator(str[right]) == true)
+				printf("'%c' IS AN OPERATOR\n", str[right]);
+
+			right++;
+			left = right;
+		} else if (isDelimiter(str[right]) == true && left != right
+				|| (right == len && left != right)) {
+			char* subStr = subString(str, left, right - 1);
+
+			if (isKeyword(subStr) == true)
+				printf("'%s' IS A KEYWORD\n", subStr);
+
+			else if (isInteger(subStr) == true)
+				printf("'%s' IS AN INTEGER\n", subStr);
+
+			else if (isRealNumber(subStr) == true)
+				printf("'%s' IS A REAL NUMBER\n", subStr);
+
+			else if (validIdentifier(subStr) == true
+					&& isDelimiter(str[right - 1]) == false)
+				printf("'%s' IS A VALID IDENTIFIER\n", subStr);
+
+			else if (validIdentifier(subStr) == false
+					&& isDelimiter(str[right - 1]) == false)
+				printf("'%s' IS NOT A VALID IDENTIFIER\n", subStr);
+			left = right;
+		}
+	}
+	return;
+}
+
+// DRIVER FUNCTION
+int main()
+{
+	// maximum length of string is 100 here
+	char str[100] = "int a = b + 1c; ";
+
+	parse(str); // calling the parse function
+
+	return (0);
+}
+
+
+
+
+
+4)SHIFT-REDUCE - 
+
+# Grammer
+gram = {
+    "E":["2E2","3E3","4"]
+}
+# Starting symbol 
+starting_terminal = "E"
+# Input string 
+inp = "2324232$"
+# Initial state of stack (empty)
+stack = "$"
+
+# : <15 will give 15 space's between the column name's
+print(f'{"Stack": <15}'+"|"+f'{"Input Buffer": <15}'+"|"+f'Parsing Action')
+
+# :-<50 will display - 50 times, Creating the illusion of a line
+print(f'{"-":-<50}')
+
+while True:
+    action = True
+    i = 0
+    while i < len(gram[starting_terminal]):
+        if gram[starting_terminal][i] in stack:
+            stack = stack.replace(gram[starting_terminal][i], starting_terminal)
+            print(f'{stack: <15}'+"|"+f'{inp: <15}'+"|"+f'Reduce S->{gram[starting_terminal][i]}')
+            i=-1
+            action = False
+        i+=1
+        
+    if len(inp)>1:
+        stack += inp[0]
+        inp = inp[1:]
+        print(f'{stack: <15}'+"|"+f'{inp: <15}'+"|"+f'Shift')
+        action = False
+        
+    if inp == "$" and stack == ("$"+starting_terminal):
+        print(f'{stack: <15}'+"|"+f'{inp: <15}'+"|"+f'Accepted')
+        break
+        
+    if action:
+        print(f'{stack: <15}'+"|"+f'{inp: <15}'+"|"+f'Rejected')
+        break
+        
+
+
+
+
+5)INTERMEDIATE
+# Operators list
+OPERATORS = {'+', '(', ')', '-', '/', '*'}
+
+# Priority of Operators
+PRI = {
+    '+': 1,
+    '-': 1,
+    '*': 2,
+    '/': 2
+}
+
+# Function to expression into postfix expression
+
+
+def infix_to_postfix(exp):
+    # initialize empty stack & empty output string
+    stack = []
+    output = ''
+
+    # For each character in expression
+    for ch in exp:
+        # if charactar is not an operator (operand) then add character in ouput string
+        if (ch not in OPERATORS):
+            output += ch
+
+        # else if character is (, then add character in stack
+        elif (ch == '('):
+            stack.append('(')
+
+        # else if character is ')', pop from stack until ( is found
+        # add poped character's in the output string
+        elif (ch == ')'):
+            while stack and stack[-1] != '(':
+                output += stack.pop()
+            # pop '(' from stack finally
+            stack.pop()
+
+        # else if character is an operator
+        # if stack is empty push character in stack
+        # else compare character with character in stack's top and :-
+        #  if character has higher precedence push char. to stack
+        #  if char. has lower precedence take items from stack one by one and add them in o.p string
+        #  then push the character  in stack
+        else:
+            while stack and stack[-1] != '(' and PRI[ch] <= PRI[stack[-1]]:
+                output += stack.pop()
+            stack.append(ch)
+
+    # finally when the expression is done evaluating pop the remaining char. from stack and add them in i/p string
+    while stack:
+        output += stack.pop()
+
+    print(f'POSTFIX: {output}')
+    return output
+
+# Function to generate 3 address code of given postfix expression
+
+
+def generate3AC(postfix):
+    print('### INTERMEDIATE CODE ###')
+
+    # initialize a empty stack and a t variable to 1
+    exp_stack = []
+    t = 1
+
+    # For char. in postfix expression
+    for i in postfix:
+        # if char. is not an operator add character in exp_stack
+        if i not in OPERATORS:
+            exp_stack.append(i)
+        else:
+            # pop top 2 characters from stack and add the operator in between
+            # and label expression as t{t}
+            print(f't{t} = {exp_stack[-2]} {i} {exp_stack[-1]}')
+            exp_stack = exp_stack[:-2]
+
+            # next add the label expression in exp_stack and increment value of t
+            exp_stack.append(f't{t}')
+            t += 1
+
+
+expression = "(a*b+c)/d"
+postfix = infix_to_postfix(expression)
+generate3AC(postfix)
+
+
+
+
+
+
+6)CODE OPTIMIZATION 
+#include <stdio.h>
+#include <string.h>
+struct op
+{
+    char l;
+    char r[20];
+} op[10], pr[10];
+
+int main()
+{
+    int a, i, k, j, n, z = 0, m, q;
+    char *p, *l;
+    char temp, t;
+    char *tem;
+    printf("Enter the Number of Values:");
+    scanf("%d", &n);
+    for (i = 0; i < n; i++)
+    {
+        printf("left: ");
+        scanf(" %c", &op[i].l);
+        printf("right: ");
+        scanf(" %s", &op[i].r);
+    }
+    printf("Intermediate Code\n");
+    for (i = 0; i < n; i++)
+    {
+        printf("%c=", op[i].l);
+        printf("%s\n", op[i].r);
+    }
+    for (i = 0; i < n - 1; i++)
+    {
+        temp = op[i].l;
+        for (j = 0; j < n; j++)
+        {
+            p = strchr(op[j].r, temp);
+            if (p)
+            {
+                pr[z].l = op[i].l;
+                strcpy(pr[z].r, op[i].r);
+                z++;
+            }
+        }
+    }
+    pr[z].l = op[n - 1].l;
+    strcpy(pr[z].r, op[n - 1].r);
+    z++;
+    printf("\nAfter Dead Code Elimination\n");
+    for (k = 0; k < z; k++)
+    {
+        printf("%c\t=", pr[k].l);
+        printf("%s\n", pr[k].r);
+    }
+    for (m = 0; m < z; m++)
+    {
+        tem = pr[m].r;
+        for (j = m + 1; j < z; j++)
+        {
+            p = strstr(tem, pr[j].r);
+            if (p)
+            {
+                t = pr[j].l;
+                pr[j].l = pr[m].l;
+                for (i = 0; i < z; i++)
+                {
+                    l = strchr(pr[i].r, t);
+                    if (l)
+                    {
+                        a = l - pr[i].r;
+                        printf("pos: %d\n", a);
+                        pr[i].r[a] = pr[m].l;
+                    }
+                }
+            }
+        }
+    }
+    printf("Eliminate Common Expression\n");
+    for (i = 0; i < z; i++)
+    {
+        printf("%c\t=", pr[i].l);
+        printf("%s\n", pr[i].r);
+    }
+    for (i = 0; i < z; i++)
+    {
+        for (j = i + 1; j < z; j++)
+        {
+            q = strcmp(pr[i].r, pr[j].r);
+            if ((pr[i].l == pr[j].l) && !q)
+            {
+                pr[i].l = '\0';
+            }
+        }
+    }
+    printf("Optimized Code\n");
+    for (i = 0; i < z; i++)
+    {
+        if (pr[i].l != '\0')
+        {
+            printf("%c=", pr[i].l);
+            printf("%s\n", pr[i].r);
+        }
+    }
+    return 0;
+}
+
+
+
+
+
